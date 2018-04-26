@@ -1,9 +1,0 @@
-
--------------------------------------------------------------------------------
-
-animal3D SDK
-Copyright 2011-2018 Daniel S. Buckstein
-
-This product includes software developed by Daniel S. Buckstein.
-
--------------------------------------------------------------------------------
