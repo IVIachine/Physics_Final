@@ -209,6 +209,7 @@
     <ClInclude Include="..\..\..\source\animal3D-DemoProject\a3_dylib_config_export.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\..\..\resource\glsl\4x\cs\physicsCompute_header.glsl" />
     <None Include="..\..\..\resource\glsl\4x\fs\drawColorAttrib_fs4x.glsl" />
     <None Include="..\..\..\resource\glsl\4x\fs\drawColorUnifTexture_fs4x.glsl" />
     <None Include="..\..\..\resource\glsl\4x\fs\drawColorUnif_fs4x.glsl" />
