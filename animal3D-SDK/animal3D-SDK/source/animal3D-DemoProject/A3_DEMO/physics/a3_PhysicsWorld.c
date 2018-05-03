@@ -509,7 +509,10 @@ int gpf_createComputeProgram(const char *filePath)
 {
 	GLuint program = -1;
 	GLuint computeShader = glCreateShader(GL_COMPUTE_SHADER);
+	// if we have a header to read shared data between multiple compute shaders, read from that here
 
+
+	// otherwise open the filepath and read from that
 	return program;
 }
 
