@@ -48,6 +48,8 @@ extern "C"
 	typedef struct a3_PhysicsWorld					a3_PhysicsWorld;
 	typedef struct a3_PhysicsWorldState				a3_PhysicsWorldState;
 	typedef struct a3_DemoStateShaderProgram		a3_DemoStateShaderProgram;
+	typedef struct rigidBodySSBOBufferData			rigidBodySSBOBufferData;
+	typedef struct fakeRigidBody					fakeRigidBody;
 #endif	// __cplusplus
 
 
@@ -148,7 +150,6 @@ extern "C"
 		//---------------------------------------------------------------------
 		// SSBO handles
 		GLuint ssboRigidbodies;
-		GLuint computeProgram;
 	};
 
 	
@@ -171,6 +172,21 @@ extern "C"
 // We need:
 // a buffer that stores all the rigidbodies
 // a max number of rigidbodies
+	struct fakeRigidBody
+	{
+		a3vec3 velocity;
+		a3vec3 position;
+		float massInv;
+
+		unsigned int type;
+		unsigned int characteristicOne, characteristicTwo, characteristicThree, characteristicFour;
+	};
+
+	struct rigidBodySSBOBufferData
+	{
+		unsigned int rigidBodyCount;
+		fakeRigidBody rigidbody[physicsMaxCount_rigidbody];
+	} sendMetoTheShader;
 
 // we need access to openGL to bind the buffers for the SSBOs
 	void ssboBindBuffer(GLuint *program, GLuint dataSize, void *bufferData, GLuint bindingLocation);
