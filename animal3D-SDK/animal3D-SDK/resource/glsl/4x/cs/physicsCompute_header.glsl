@@ -14,110 +14,71 @@
 */
 
 #version 430
+layout(local_size_x = 1, local_size_y = 1) in;
 
-// Constants
-const uint MAX_RIGIDBODIES = 128;
-
-// Enumerated data types
-enum a3_ConvexHullType
-{
-	a3hullType_none,
-	a3hullType_point,
-	a3hullType_plane,
-	a3hullType_box,
-	a3hullType_sphere,
-	a3hullType_cylinder,
-	a3hullType_mesh,
-};
-
-enum a3_ConvexHullFlag
-{
-	a3hullFlag_none,			// 0x00
-	a3hullFlag_is3D,			// 0x01
-	a3hullFlag_isAxisAligned,	// 0x02
-};
-
-// generic convex hull properties
-enum a3_ConvexHullProperty
-{
-	// boxy shape properties
-	a3hullProperty_width = 0,
-	a3hullProperty_height,
-	a3hullProperty_depth,
-	a3hullProperty_halfwidth,
-	a3hullProperty_halfheight,
-	a3hullProperty_halfdepth,
-	a3hullProperty_halfwidthSq,
-	a3hullProperty_halfheightSq,
-	a3hullProperty_halfdepthSq,
-
-	// round shape properties
-	a3hullProperty_radius = 0,
-	a3hullProperty_length,
-	a3hullProperty_radiusSq,
-
-	// user-defined properties
-	a3hullProperty_user = a3hullProperty_maxCount_preset,
-};
-
-enum a3_Axis
-{
-	a3axis_x,	// index 0 in a matrix
-	a3axis_y,	// index 1 in a matrix
-	a3axis_z,	// index 2 in a matrix
-};
-
-// Physics structures
 struct Rigidbody
 {
-	vec3
-		position, 
-		velocity, 
-		acceleration, 
-		momentum, 
-		force;
-
-	float
-		mass,
-		massInv;
-
-	vec4
-		rotation,
-		torque,
-		velocity_a,
-		acceleration_a;
-
-	mat3
-		inertiaTensor,
-		intertiaTensorInv,
-		inertiaTensor_t,
-		intertiaTensorInv_t;
-
-	vec3
-		centerMass,
-		centerMass_t;
+	vec3 velocity;
+	vec3 position;
+	uint characteristicOne, characteristicTwo, characteristicThree, characteristicFour;
 };
 
-struct ConvexHull
+layout(std430, binding = 0) buffer rigidBodies
 {
-	Rigidbody *rb;
-	const mat4
-		*transform,
-		*transformInv;
-
-	a3_ConvexHullType type;
-	a3_ConvexHullFlag flag;
-
-	a3_Axis axis;
-	a3real prop[a3hullProperty_maxCount_preset + a3hullProperty_maxCount_user];
+    Rigidbody rigidBodyData[];
 };
 
-struct ConvexHullCollision
+int collisionTestSpheres(inout vec3 colPointA, inout vec3 colPointB, inout vec3 colNormalA, inout vec3 colNormalB,
+	vec3 sphereCenter_a, float sphereRadius_a, vec3 sphereCenter_b, float sphereRadius_b)
 {
-	const ConvexHull *hull_a, *hull_b;
+	float sumRadii = sphereRadius_a + sphereRadius_b;
+	vec3 diff_tmp = sphereCenter_a - sphereCenter_b;
 
-	// list of contact points + normals
-	//vec3 contact_a[a3hullContact_maxCount], contact_b[a3hullContact_maxCount];
-	//vec3 normal_a[a3hullContact_maxCount], normal_b[a3hullContact_maxCount];
-	unsigned int contactCount_a, contactCount_b;
-};
+	if (length(diff_tmp) <= sumRadii)
+	{
+		// generate contacts
+		normalize(diff_tmp);
+		colNormalA = diff_tmp;
+		
+		colPointB = diff_tmp * sphereRadius_b;
+		colPointB += sphereCenter_b;
+		
+		diff_tmp *= -1;
+		colNormalB = diff_tmp;
+		colPointA = diff_tmp * sphereRadius_a;
+		colPointA += sphereCenter_a;
+
+		return 1;
+	}
+	return 0;
+}
+
+int collisionTestSphereAABB(inout vec3 colPointA, inout vec3 colPointB, inout vec3 colNormalA, inout vec3 colNormalB,
+	vec3 sphereCenter_localToAABB, float sphereRadius, vec3 aabbMinExtents, vec3 aabbMaxExtents)
+{
+	vec3 tmp;
+	// closest point to the sphere center on the box
+	tmp.x = (sphereCenter_localToAABB[0] < aabbMinExtents[0]) ? aabbMinExtents[0] : (sphereCenter_localToAABB[0] > aabbMaxExtents[0]) ? aabbMaxExtents[0] : sphereCenter_localToAABB[0];
+	tmp.y = (sphereCenter_localToAABB[1] < aabbMinExtents[1]) ? aabbMinExtents[1] : (sphereCenter_localToAABB[1] > aabbMaxExtents[1]) ? aabbMaxExtents[1] : sphereCenter_localToAABB[1];
+	tmp.z = (sphereCenter_localToAABB[2] < aabbMinExtents[2]) ? aabbMinExtents[2] : (sphereCenter_localToAABB[2] > aabbMaxExtents[2]) ? aabbMaxExtents[2] : sphereCenter_localToAABB[2];
+
+	vec3 diff_tmp = tmp - sphereCenter_localToAABB;
+	if (length(diff_tmp) <=  sphereRadius)
+	{
+		// sphere is a
+		// box is b
+		colPointA = colPointB = tmp;
+		normalize(diff_tmp);
+
+		colNormalA = diff_tmp;
+		colNormalB = -diff_tmp;
+
+		return 1;
+	}
+
+	return 0;
+}
+
+void main() {
+	
+}
