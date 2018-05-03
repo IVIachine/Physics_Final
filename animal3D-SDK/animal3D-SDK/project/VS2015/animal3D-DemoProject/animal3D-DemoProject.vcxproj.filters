@@ -55,6 +55,9 @@
     <Filter Include="Source Files\common\A3_DEMO\physics">
       <UniqueIdentifier>{607eb4c9-bb8c-452f-82f9-9b3bb427aac1}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource Files\A3_DEMO\glsl\4x\cs">
+      <UniqueIdentifier>{0f9ea0e4-7b3f-4f65-912a-75bbef9c2fb1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="_src_win\main_dll.c">
@@ -165,6 +168,9 @@
     </None>
     <None Include="..\..\..\resource\glsl\4x\vs\dummy_vs4x.glsl">
       <Filter>Resource Files\A3_DEMO\glsl\4x\vs</Filter>
+    </None>
+    <None Include="..\..\..\resource\glsl\4x\cs\physicsCompute_header.glsl">
+      <Filter>Resource Files\A3_DEMO\glsl\4x\cs</Filter>
     </None>
   </ItemGroup>
 </Project>

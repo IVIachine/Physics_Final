@@ -505,14 +505,96 @@ extern inline int a3physicsUnlockWorld(a3_PhysicsWorld *world)
 
 
 //-----------------------------------------------------------------------------
+// Reference: Brian and Duncan's Animation Blending
 int gpf_createComputeProgram(const char *filePath)
 {
 	GLuint program = -1;
 	GLuint computeShader = glCreateShader(GL_COMPUTE_SHADER);
 	// if we have a header to read shared data between multiple compute shaders, read from that here
+	// tyler decided we're doing this only in the header file, so it's not really a header
+	char *strings[2] = { 0, 0 }, c;
+	unsigned long length = 0, i = 0;
+	FILE *file;
 
+	file = fopen(filePath, "r");
 
-	// otherwise open the filepath and read from that
+	if (file)
+	{
+		// get file length 1 char at a time
+		while ((c = fgetc(file)) != EOF)
+			++length;
+
+		// go to start of file
+		rewind(file);
+		// allocate space for each char in file + 1 for null terminator
+		strings[1] = (char*)malloc((length * sizeof(char)) + 1);
+
+		if (strings[1])
+		{
+			// go through file again 1 char at a time and store it in buffer
+			while ((c = fgetc(file)) != EOF)
+				strings[1][i++] = c;
+
+			strings[1][i] = '\0';
+			fclose(file);
+		}
+	}
+	else
+		return program;
+
+	glShaderSource(computeShader, 2, strings, 0);
+	glCompileShader(computeShader);
+
+	GLint isCompiled = 0;
+	glGetShaderiv(computeShader, GL_COMPILE_STATUS, &isCompiled);
+	if (isCompiled == GL_FALSE)
+	{
+		GLint maxLength = 0;
+		glGetShaderiv(computeShader, GL_INFO_LOG_LENGTH, &maxLength);
+
+		//The maxLength includes the NULL character
+		char *infoLog = (char *)malloc(maxLength * sizeof(char));
+		glGetShaderInfoLog(computeShader, maxLength, &maxLength, infoLog);
+
+		printf("%s", infoLog);
+		free(infoLog);
+
+		glDeleteShader(computeShader);
+	}
+	else
+	{
+		program = glCreateProgram();
+		glAttachShader(program, computeShader);
+		glLinkProgram(program);
+
+		GLint isLinked = 0;
+		glGetProgramiv(program, GL_LINK_STATUS, (int *)&isLinked);
+		if (isLinked == GL_FALSE)
+		{
+			GLint maxLength = 0;
+			glGetProgramiv(program, GL_INFO_LOG_LENGTH, &maxLength);
+
+			//The maxLength includes the NULL character
+			char *infoLog = (char *)malloc(maxLength);
+			glGetProgramInfoLog(program, maxLength, &maxLength, infoLog);
+
+			glDeleteProgram(program);
+			glDeleteShader(computeShader);
+
+			printf("%s", infoLog);
+			free(infoLog);
+		}
+		else
+		{
+			glDetachShader(program, computeShader);
+		}
+	}
+
+	if (strings[0])
+		free(strings[0]);
+	if (strings[1])
+		free(strings[1]);
+
 	return program;
 }
 
