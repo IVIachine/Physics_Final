@@ -18,8 +18,9 @@ layout(local_size_x = 1, local_size_y = 1) in;
 
 struct Rigidbody
 {
-	vec3 velocity;
 	vec3 position;
+	vec3 velocity;
+	float massInv;
 	uint type;
 	uint characteristicOne, characteristicTwo, characteristicThree, characteristicFour;
 };
@@ -101,14 +102,14 @@ void main() {
 				{
 					vec3 minB, maxB;
 
-					minB.x = hull_b->transform->v3.x - hull_b->prop[a3hullProperty_halfwidth];
-					maxB.x = hull_b->transform->v3.x + hull_b->prop[a3hullProperty_halfwidth];
+					minB.x = rigidBodyData[i].position.x - rigidBodyData[i].characteristicOne;
+					maxB.x = rigidBodyData[i].position.x +rigidBodyData[i].characteristicOne;
 
-					minB.y = hull_b->transform->v3.y - hull_b->prop[a3hullProperty_halfheight];
-					maxB.y = hull_b->transform->v3.y + hull_b->prop[a3hullProperty_halfheight];
+					minB.y = rigidBodyData[i].position.y - rigidBodyData[i].characteristicTwo;
+					maxB.y = rigidBodyData[i].position.y + rigidBodyData[i].characteristicTwo;
 
-					minB.z = hull_b->transform->v3.z - hull_b->prop[a3hullProperty_halfdepth];
-					maxB.z = hull_b->transform->v3.z + hull_b->prop[a3hullProperty_halfdepth];
+					minB.z = rigidBodyData[i].position.z - rigidBodyData[i].characteristicThree;
+					maxB.z = rigidBodyData[i].position.z + rigidBodyData[i].characteristicThree;
 
 					collided = collisionTestSphereAABB(colPointA, colPointB, normalA, normalB, rigidBodyData[coord].position, rigidBodyData[coord].characteristicOne,
 						minB, maxB);
@@ -118,14 +119,35 @@ void main() {
 			{
 				if(rigidBodyData[i].type == 0)
 				{
-					
+					vec3 minB, maxB;
+
+					minB.x = rigidBodyData[coord].position.x - rigidBodyData[coord].characteristicOne;
+					maxB.x = rigidBodyData[coord].position.x +rigidBodyData[coord].characteristicOne;
+										   
+					minB.y = rigidBodyData[coord].position.y - rigidBodyData[coord].characteristicTwo;
+					maxB.y = rigidBodyData[coord].position.y + rigidBodyData[coord].characteristicTwo;
+										   
+					minB.z = rigidBodyData[coord].position.z - rigidBodyData[coord].characteristicThree;
+					maxB.z = rigidBodyData[coord].position.z + rigidBodyData[coord].characteristicThree;
+
+					collided = collisionTestSphereAABB(colPointA, colPointB, normalA, normalB, rigidBodyData[i].position, rigidBodyData[i].characteristicOne,
+						minB, maxB);
 				}
 			}
 		}
 
 		if(collided == 1)
 		{
-			
+				// http://www.chrishecker.com/images/e/e7/Gdmphys3.pdf
+
+				vec3 rVel;
+				rVel =  rigidBodyData[coord].velocity - rigidBodyData[i].velocity;
+
+				float j1 = (-2 * dot(rVel, normalA)) / (dot(normalA, 
+					normalA)*(rigidBodyData[coord].massInv + rigidBodyData[i].massInv));
+
+				rigidBodyData[coord].velocity = normalA * (j1 * rigidBodyData[coord].massInv);
+				rigidBodyData[i].velocity =  normalB * (j1 * rigidBodyData[i].massInv);
 		}
 	}
 }
