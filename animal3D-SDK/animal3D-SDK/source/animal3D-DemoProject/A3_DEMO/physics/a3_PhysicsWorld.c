@@ -268,6 +268,16 @@ void a3physicsInitialize_internal(a3_PhysicsWorld *world)
 	setupBSPs(world, min.v, max.v, units.v);
 
 	world->framesSkipped = 0;
+
+	// Create the compute program
+	if (world->computeProgram = gpf_createComputeProgram("../../../../resource/glsl/4x/cs/physicsCompute_header/glsl") == -1)
+		printf("\nError: file not found!\n");
+
+	// bind ssbo buffer
+	ssboBindBuffer(&(world->ssboRigidbodies), sizeof(world->rigidbody), &world->rigidbody, 2);
+	// write initial data
+	ssboWriteBuffer(&(world->ssboRigidbodies), sizeof(world->rigidbody), &world->rigidbody);
+
 	// reset state
 	a3physicsWorldStateReset(world->state);
 }
@@ -306,7 +316,6 @@ void a3physicsUpdate(a3_PhysicsWorld *world, double dt)
 
 	// generic counter
 	unsigned int i, j;
-
 
 	// ****TO-DO: 
 	//	- write to state
@@ -393,6 +402,19 @@ void a3physicsUpdate(a3_PhysicsWorld *world, double dt)
 		*world->state = *state;
 		a3physicsUnlockWorld(world);
 	}
+
+	//---------------------------------------------------------------------
+	// DO THIS AFTER INTEGRATION
+	// write to the buffer, current rigidbody data
+	ssboWriteBuffer(&(world->ssboRigidbodies), sizeof(world->rigidbody), &world->rigidbody);
+	//
+	// dispatch the compute shader
+	glUseProgram(world->computeProgram);
+	glDispatchCompute(16, 1, 1);
+	//
+	// read the data back
+	ssboReadBuffer(&(world->ssboRigidbodies), sizeof(world->rigidbody), &world->rigidbody);
+	//---------------------------------------------------------------------
 }
 
 
@@ -467,6 +489,7 @@ int a3physicsWorldStateReset(a3_PhysicsWorldState *worldState)
 // get thread ID
 #ifdef _WIN32
 #include <Windows.h>
+#include <stdlib.h>
 int threadID()
 {
 	return GetCurrentThreadId();

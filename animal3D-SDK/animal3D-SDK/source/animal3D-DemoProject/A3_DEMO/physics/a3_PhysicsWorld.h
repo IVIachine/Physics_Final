@@ -142,6 +142,9 @@ extern "C"
 		BSP bsps[physicsMaxCount_bsp];
 		unsigned int numBSPs;
 		//---------------------------------------------------------------------
+		// SSBO handles
+		GLuint ssboRigidbodies;
+		GLuint computeProgram;
 	};
 
 	
@@ -164,6 +167,8 @@ extern "C"
 // We need:
 // a buffer that stores all the rigidbodies
 // a max number of rigidbodies
+	
+	
 
 	// create compute program
 	int gpf_createComputeProgram(const char *filePath);
