@@ -32,6 +32,7 @@
 
 // include utilities on an as-needed basis
 #include "animal3D/a3utility/a3_Timer.h"
+#include "A3_DEMO\_utilities\a3_DemoShaderProgram.h"
 
 
 // external
@@ -270,6 +271,9 @@ void a3physicsInitialize_internal(a3_PhysicsWorld *world)
 	world->framesSkipped = 0;
 
 	// Create the compute program
+	// Set the program to equal negative one
+	// In update - conditional check - if program = -1, don't do it, otherwise do it
+//	world->computeShader = -1;
 
 	// bind ssbo buffer
 	ssboBindBuffer(&(world->ssboRigidbodies), sizeof(world->rigidbody), &world->rigidbody, 2);
@@ -410,6 +414,11 @@ void a3physicsUpdate(a3_PhysicsWorld *world, double dt)
 	//TYLER GO
 	/*glUseProgram(world->computeProgram);
 	glDispatchCompute(16, 1, 1);*/
+	//if (world->computeShader != -1)
+	{
+		a3shaderProgramActivate(world->computeShader->program);
+		glDispatchCompute(16, 1, 1);
+	}
 	//
 	// read the data back
 	ssboReadBuffer(&(world->ssboRigidbodies), sizeof(world->rigidbody), &world->rigidbody);
@@ -527,6 +536,7 @@ extern inline int a3physicsUnlockWorld(a3_PhysicsWorld *world)
 
 
 //-----------------------------------------------------------------------------
+// Final project functions
 
 void ssboBindBuffer(GLuint *program, GLuint dataSize, void *bufferData, GLuint bindingLocation)
 {
@@ -551,4 +561,9 @@ void ssboReadBuffer(GLuint *program, GLuint dataSize, void *dest)
 	GLvoid* ptr = glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_WRITE);
 	ptr = dest;
 	glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
+}
+
+void saveShaderReference(a3_PhysicsWorld *world, a3_DemoStateShaderProgram *program)
+{
+	world->computeShader = program;
 }

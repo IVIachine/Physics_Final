@@ -47,6 +47,7 @@ extern "C"
 #else	// !__cplusplus
 	typedef struct a3_PhysicsWorld					a3_PhysicsWorld;
 	typedef struct a3_PhysicsWorldState				a3_PhysicsWorldState;
+	typedef struct a3_DemoStateShaderProgram		a3_DemoStateShaderProgram;
 #endif	// __cplusplus
 
 
@@ -108,6 +109,9 @@ extern "C"
 		// the state to store all of the things that need to go to graphics
 		a3_PhysicsWorldState state[1];
 
+		//---------------------------------------------------------------------
+		// Reference to the compute shader?
+		a3_DemoStateShaderProgram *computeShader;
 
 		//---------------------------------------------------------------------
 		// general variables pertinent to the state
@@ -167,16 +171,13 @@ extern "C"
 // We need:
 // a buffer that stores all the rigidbodies
 // a max number of rigidbodies
-	
-	
-
-	// create compute program
-	int gpf_createComputeProgram(const char *filePath);
 
 // we need access to openGL to bind the buffers for the SSBOs
 	void ssboBindBuffer(GLuint *program, GLuint dataSize, void *bufferData, GLuint bindingLocation);
 	void ssboWriteBuffer(GLuint *program, GLuint dataSize, void *data);
 	void ssboReadBuffer(GLuint *program, GLuint dataSize, void *dest);
+
+	void saveShaderReference(a3_PhysicsWorld *world, a3_DemoStateShaderProgram *program);
 
 	// how to use
 	//setup compute program (need to make a function for it)
