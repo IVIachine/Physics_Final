@@ -634,7 +634,7 @@ void ssboWriteBuffer(GLuint *program, GLuint dataSize, void *data)
 {
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, *program);
 	GLvoid* ptr = glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_WRITE);
-	memcpy(ptr, data, dataSize);
+	ptr = data;
 	glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 }
 
@@ -642,6 +642,6 @@ void ssboReadBuffer(GLuint *program, GLuint dataSize, void *dest)
 {
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, *program);
 	GLvoid* ptr = glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_WRITE);
-	memcpy(dest, ptr, dataSize);
+	ptr = dest;
 	glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 }
