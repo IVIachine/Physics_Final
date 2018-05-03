@@ -456,6 +456,10 @@ void a3demo_loadShaders(a3_DemoState *demoState)
 	a3shaderProgramCreate(currentDemoProg->program);
 	a3shaderProgramAttachShader(currentDemoProg->program, shaderList.physicsCompute_cs);
 
+	// Find a way to save a reference to this program in the physics world
+	// This should do it?
+	saveShaderReference(demoState->physicsWorld, currentDemoProg);
+
 	// draw ray program
 	currentDemoProg = demoState->prog_drawRay;
 	a3shaderProgramCreate(currentDemoProg->program);
