@@ -14,17 +14,19 @@
 */
 
 #version 430
-/*layout(local_size_x = 1, local_size_y = 1) in;
+layout(local_size_x = 1, local_size_y = 1) in;
 
 struct Rigidbody
 {
 	vec3 velocity;
 	vec3 position;
+	uint type;
 	uint characteristicOne, characteristicTwo, characteristicThree, characteristicFour;
 };
 
-layout(std430, binding = 0) buffer rigidBodies
+layout(std430, binding = 1) buffer rigidBodies
 {
+	uint numRigidbodies;
     Rigidbody rigidBodyData[];
 };
 
@@ -77,8 +79,53 @@ int collisionTestSphereAABB(inout vec3 colPointA, inout vec3 colPointB, inout ve
 	}
 
 	return 0;
-}*/
+}
 
 void main() {
-	return 0;
+	int coord = ivec2(gl_GlobalInvocationID.xy).x;
+
+	for(int i = 0; i < numRigidbodies; i++)
+	{
+		vec3 normalA, normalB, colPointA, colPointB;
+		int collided = 0;
+		if(coord != i)
+		{
+			if(rigidBodyData[coord].type == 0)
+			{
+				if(rigidBodyData[i].type == 0)
+				{
+					collided = collisionTestSpheres(colPointA, colPointB, normalA, normalB, rigidBodyData[coord].position, rigidBodyData[coord].characteristicOne,
+						rigidBodyData[i].position, rigidBodyData[i].characteristicOne);
+				}
+				else if(rigidBodyData[i].type == 1)
+				{
+					vec3 minB, maxB;
+
+					minB.x = hull_b->transform->v3.x - hull_b->prop[a3hullProperty_halfwidth];
+					maxB.x = hull_b->transform->v3.x + hull_b->prop[a3hullProperty_halfwidth];
+
+					minB.y = hull_b->transform->v3.y - hull_b->prop[a3hullProperty_halfheight];
+					maxB.y = hull_b->transform->v3.y + hull_b->prop[a3hullProperty_halfheight];
+
+					minB.z = hull_b->transform->v3.z - hull_b->prop[a3hullProperty_halfdepth];
+					maxB.z = hull_b->transform->v3.z + hull_b->prop[a3hullProperty_halfdepth];
+
+					collided = collisionTestSphereAABB(colPointA, colPointB, normalA, normalB, rigidBodyData[coord].position, rigidBodyData[coord].characteristicOne,
+						minB, maxB);
+				}
+			}
+			else if(rigidBodyData[coord].type == 1)
+			{
+				if(rigidBodyData[i].type == 0)
+				{
+					
+				}
+			}
+		}
+
+		if(collided == 1)
+		{
+			
+		}
+	}
 }
