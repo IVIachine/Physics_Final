@@ -286,7 +286,10 @@ extern "C"
 					prog_drawLambert[1],				// draw Lambert shading
 					prog_drawColorUnifTexture[1],		// draw texture mixed with solid color
 					prog_drawColor[1],					// draw color attribute
-					prog_drawColorUnif[1];				// draw uniform color
+					prog_drawColorUnif[1],				// draw uniform color
+
+														//TYLER GO
+					prog_physicsCompute[1];
 			};
 		};
 

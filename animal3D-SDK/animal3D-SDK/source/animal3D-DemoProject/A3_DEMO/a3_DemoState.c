@@ -372,6 +372,9 @@ void a3demo_loadShaders(a3_DemoState *demoState)
 		"uLightPos_eye",
 		"uTex_dm",
 		"uColor",
+
+		// PHYSICS FINAL PROJ
+		//TYLER GO
 	};
 
 
@@ -402,6 +405,10 @@ void a3demo_loadShaders(a3_DemoState *demoState)
 			a3_Shader drawColorUnifTexture_fs[1];
 			a3_Shader drawColorUnif_fs[1];
 			a3_Shader drawColorAttrib_fs[1];
+
+			// compute shaders
+			//TYLER GO
+			a3_Shader physicsCompute_cs[1];
 		};
 	} shaderList = { 0 };
 	a3_Shader *const shaderListPtr = (a3_Shader *)(&shaderList);
@@ -425,6 +432,8 @@ void a3demo_loadShaders(a3_DemoState *demoState)
 		{ a3shader_fragment,	1, { "../../../../resource/glsl/4x/fs/e/drawColorUnifTexture_fs4x.glsl" } },
 		{ a3shader_fragment,	1, { "../../../../resource/glsl/4x/fs/e/drawColorUnif_fs4x.glsl" } },
 		{ a3shader_fragment,	1, { "../../../../resource/glsl/4x/fs/e/drawColorAttrib_fs4x.glsl" } },
+		//TYLER GO
+		{ a3shader_compute,		1, { "../../../../resource/glsl/4x/cs/physicsCompute_header.glsl" } },
 	};
 
 	// load unique shaders: 
@@ -441,6 +450,11 @@ void a3demo_loadShaders(a3_DemoState *demoState)
 	// setup programs: 
 	//	- create program object
 	//	- attach shader objects
+
+	//TYLER GO
+	currentDemoProg = demoState->prog_physicsCompute;
+	a3shaderProgramCreate(currentDemoProg->program);
+	a3shaderProgramAttachShader(currentDemoProg->program, shaderList.physicsCompute_cs);
 
 	// draw ray program
 	currentDemoProg = demoState->prog_drawRay;
@@ -823,6 +837,9 @@ void a3demo_update(a3_DemoState *demoState, double dt)
 
 	//a3_ConvexHullCollision testCollision[1];
 
+	//TYLER GO
+	/*a3shaderProgramActivate(demoState->prog_physicsCompute->program);
+	glDispatchCompute(16, 1, 1);*/
 
 	// update scene objects
 	for (i = 0; i < graphicsObjectCount; ++i)
