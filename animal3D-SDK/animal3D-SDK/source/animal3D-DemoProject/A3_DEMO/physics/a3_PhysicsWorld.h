@@ -37,6 +37,7 @@
 
 #include "a3_Collision.h"
 #include "../BSP.h"
+#include "GL/glew.h"
 
 //-----------------------------------------------------------------------------
 
@@ -157,6 +158,29 @@ extern "C"
 	inline int a3physicsLockWorld(a3_PhysicsWorld *world);
 	inline int a3physicsUnlockWorld(a3_PhysicsWorld *world);
 
+
+//-----------------------------------------------------------------------------
+// For the final project
+// We need:
+// a buffer that stores all the rigidbodies
+// a max number of rigidbodies
+
+	// create compute program
+	int gpf_createComputeProgram(const char *filePath);
+
+// we need access to openGL to bind the buffers for the SSBOs
+	void ssboBindBuffer(GLuint *program, GLuint dataSize, void *bufferData, GLuint bindingLocation);
+	void ssboWriteBuffer(GLuint *program, GLuint dataSize, void *data);
+	void ssboReadBuffer(GLuint *program, GLuint dataSize, void *dest);
+
+	// how to use
+	//setup compute program (need to make a function for it)
+	//bind the buffer
+	//initialize the buffer data
+	//write to the ssbos before calculations
+	//  call the compute program (glUseProgram)
+	//  calculate changes to rigidbodies
+	//write output to physics world rigidbodies
 
 //-----------------------------------------------------------------------------
 
