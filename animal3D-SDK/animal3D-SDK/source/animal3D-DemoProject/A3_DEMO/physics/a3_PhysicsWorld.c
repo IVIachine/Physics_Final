@@ -519,15 +519,15 @@ int gpf_createComputeProgram(const char *filePath)
 void ssboBindBuffer(GLuint *program, GLuint dataSize, void *bufferData, GLuint bindingLocation)
 {
 	glGenBuffers(1, program);
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, program);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, *program);
 	glBufferData(GL_SHADER_STORAGE_BUFFER, dataSize, bufferData, GL_DYNAMIC_COPY);
-	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, bindingLocation, program);
+	glBindBufferBase(GL_SHADER_STORAGE_BUFFER, bindingLocation, *program);
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 }
 
 void ssboWriteBuffer(GLuint *program, GLuint dataSize, void *data)
 {
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, program);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, *program);
 	GLvoid* ptr = glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_WRITE);
 	memcpy(ptr, data, dataSize);
 	glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
@@ -535,7 +535,7 @@ void ssboWriteBuffer(GLuint *program, GLuint dataSize, void *data)
 
 void ssboReadBuffer(GLuint *program, GLuint dataSize, void *dest)
 {
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, program);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, *program);
 	GLvoid* ptr = glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_WRITE);
 	memcpy(dest, ptr, dataSize);
 	glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
