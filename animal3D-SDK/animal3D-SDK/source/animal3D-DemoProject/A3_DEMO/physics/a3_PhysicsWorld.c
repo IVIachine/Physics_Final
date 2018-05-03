@@ -276,9 +276,9 @@ void a3physicsInitialize_internal(a3_PhysicsWorld *world)
 //	world->computeShader = -1;
 
 	// bind ssbo buffer
-	ssboBindBuffer(&(world->ssboRigidbodies), sizeof(world->rigidbody), &world->rigidbody, 2);
+	ssboBindBuffer(&(world->ssboRigidbodies), sizeof(sendMetoTheShader), &sendMetoTheShader, 2);
 	// write initial data
-	ssboWriteBuffer(&(world->ssboRigidbodies), sizeof(world->rigidbody), &world->rigidbody);
+	ssboWriteBuffer(&(world->ssboRigidbodies), sizeof(sendMetoTheShader), &sendMetoTheShader);
 
 	// reset state
 	a3physicsWorldStateReset(world->state);
@@ -317,7 +317,7 @@ void a3physicsUpdate(a3_PhysicsWorld *world, double dt)
 	const a3real dt_r = (a3real)(dt);
 
 	// generic counter
-	unsigned int i, j;
+	unsigned int i;
 
 	// ****TO-DO: 
 	//	- write to state
@@ -351,24 +351,7 @@ void a3physicsUpdate(a3_PhysicsWorld *world, double dt)
 
 	a3_ConvexHullCollision collision[1] = { 0 };
 
-	if (world->framesSkipped > 5)
-	{
-		for (unsigned int x = 0; x < world->numBSPs; ++x)
-		{
-			for (i = 0; i < world->bsps[x].numContainedHulls; ++i)
-			{
-				for (j = 0; j < world->bsps[x].numContainedHulls; ++j)
-				{
-					if (i == j) continue;
-					if (a3collisionTestConvexHulls(collision, world->bsps[x].containedHulls[i], world->bsps[x].containedHulls[j]) > 0)
-					{
-						a3handleCollision(collision, world->bsps[x].containedHulls[i], world->bsps[x].containedHulls[j]);
-					}
-				}
-			}
-		}
-	}
-	else
+	if (world->framesSkipped < 5)
 		world->framesSkipped++;
 
 	// ****TO-DO: 
@@ -396,6 +379,47 @@ void a3physicsUpdate(a3_PhysicsWorld *world, double dt)
 
 	updateHulls(world);
 
+	if (world->framesSkipped >= 5)
+	{
+		//---------------------------------------------------------------------
+		// DO THIS AFTER INTEGRATION
+		// write to the buffer, current rigidbody data
+		sendMetoTheShader.rigidBodyCount = world->rigidbodiesActive;
+		for (unsigned int i = 0; i < sendMetoTheShader.rigidBodyCount; ++i)
+		{
+			sendMetoTheShader.rigidbody[i].velocity = world->rigidbody[i].velocity;
+			sendMetoTheShader.rigidbody[i].position = world->rigidbody[i].position;
+			sendMetoTheShader.rigidbody[i].massInv = world->rigidbody[i].massInv;
+
+			sendMetoTheShader.rigidbody[i].type = world->hull[i].type == a3hullType_sphere ? 0 : 1;
+			sendMetoTheShader.rigidbody[i].characteristicOne = world->hull[i].type == a3hullType_sphere ? (unsigned int)world->hull[i].prop[a3hullProperty_radius] : (unsigned int)world->hull[i].prop[a3hullProperty_halfwidth];
+			sendMetoTheShader.rigidbody[i].characteristicTwo = world->hull[i].type == a3hullType_sphere ? (unsigned int)world->hull[i].prop[a3hullProperty_radius] : (unsigned int)world->hull[i].prop[a3hullProperty_halfheight];
+			sendMetoTheShader.rigidbody[i].characteristicThree = world->hull[i].type == a3hullType_sphere ? (unsigned int)world->hull[i].prop[a3hullProperty_radius] : (unsigned int)world->hull[i].prop[a3hullProperty_halfdepth];
+		}
+
+		ssboWriteBuffer(&(world->ssboRigidbodies), sizeof(sendMetoTheShader), &sendMetoTheShader);
+		//
+		// dispatch the compute shader
+		//TYLER GO
+		//if (world->computeShader != -1)
+		{
+			a3shaderProgramActivate(world->computeShader->program);
+			glDispatchCompute(1, 1, 1);
+		}
+		//
+		// read the data back
+		ssboReadBuffer(&(world->ssboRigidbodies), sizeof(sendMetoTheShader), &sendMetoTheShader);
+
+		printf("%d\n", sendMetoTheShader.rigidBodyCount);
+
+		//---------------------------------------------------------------------
+		a3shaderProgramDeactivate(world->computeShader->program);
+
+		for (unsigned int i = 0; i < sendMetoTheShader.rigidBodyCount; ++i)
+		{
+			world->rigidbody[i].velocity = sendMetoTheShader.rigidbody[i].velocity;
+		}
+	}
 
 	// write operation is locked
 	if (a3physicsLockWorld(world) > 0)
@@ -404,36 +428,6 @@ void a3physicsUpdate(a3_PhysicsWorld *world, double dt)
 		*world->state = *state;
 		a3physicsUnlockWorld(world);
 	}
-
-	//---------------------------------------------------------------------
-	// DO THIS AFTER INTEGRATION
-	// write to the buffer, current rigidbody data
-	sendMetoTheShader.rigidBodyCount = world->rigidbodiesActive;
-	for (unsigned int i = 0; i < sendMetoTheShader.rigidBodyCount; ++i)
-	{
-		sendMetoTheShader.rigidbody[i].velocity = world->rigidbody[i].velocity;
-		sendMetoTheShader.rigidbody[i].position = world->rigidbody[i].position;
-		sendMetoTheShader.rigidbody[i].massInv = world->rigidbody[i].massInv;
-
-		sendMetoTheShader.rigidbody[i].type = world->hull[i].type == a3hullType_sphere ? 0 : 1;
-		sendMetoTheShader.rigidbody[i].characteristicOne = world->hull[i].type == a3hullType_sphere ? world->hull[i].prop[a3hullProperty_radius] : world->hull[i].prop[a3hullProperty_halfwidth];
-		sendMetoTheShader.rigidbody[i].characteristicTwo = world->hull[i].type == a3hullType_sphere ? world->hull[i].prop[a3hullProperty_radius] : world->hull[i].prop[a3hullProperty_halfheight];
-		sendMetoTheShader.rigidbody[i].characteristicThree = world->hull[i].type == a3hullType_sphere ? world->hull[i].prop[a3hullProperty_radius] : world->hull[i].prop[a3hullProperty_halfdepth];
-	}
-
-	ssboWriteBuffer(&(world->ssboRigidbodies), sizeof(world->rigidbody), &world->rigidbody);
-	//
-	// dispatch the compute shader
-	//TYLER GO
-	//if (world->computeShader != -1)
-	{
-		a3shaderProgramActivate(world->computeShader->program);
-		glDispatchCompute(16, 1, 1);
-	}
-	//
-	// read the data back
-	ssboReadBuffer(&(world->ssboRigidbodies), sizeof(world->rigidbody), &world->rigidbody);
-	//---------------------------------------------------------------------
 }
 
 

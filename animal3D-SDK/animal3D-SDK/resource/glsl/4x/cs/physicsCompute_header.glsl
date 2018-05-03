@@ -14,22 +14,22 @@
 */
 
 #version 430
-layout(local_size_x = 1, local_size_y = 1) in;
+layout(local_size_x = 1) in;
 
 struct Rigidbody
 {
-	vec3 position;
 	vec3 velocity;
+	vec3 position;
 	float massInv;
 	uint type;
 	uint characteristicOne, characteristicTwo, characteristicThree, characteristicFour;
 };
 
-layout(std430, binding = 1) buffer rigidBodies
+layout(std430, binding = 2) buffer rigidBodies
 {
 	uint numRigidbodies;
     Rigidbody rigidBodyData[];
-};
+} rigidbodies;
 
 int collisionTestSpheres(inout vec3 colPointA, inout vec3 colPointB, inout vec3 colNormalA, inout vec3 colNormalB,
 	vec3 sphereCenter_a, float sphereRadius_a, vec3 sphereCenter_b, float sphereRadius_b)
@@ -85,69 +85,70 @@ int collisionTestSphereAABB(inout vec3 colPointA, inout vec3 colPointB, inout ve
 void main() {
 	int coord = ivec2(gl_GlobalInvocationID.xy).x;
 
-	for(int i = 0; i < numRigidbodies; i++)
+	rigidbodies.numRigidbodies = 1000;
+
+	for(int i = 0; i < rigidbodies.numRigidbodies; i++)
 	{
 		vec3 normalA, normalB, colPointA, colPointB;
 		int collided = 0;
 		if(coord != i)
 		{
-			if(rigidBodyData[coord].type == 0)
+			if(rigidbodies.rigidBodyData[coord].type == 0)
 			{
-				if(rigidBodyData[i].type == 0)
+				if(rigidbodies.rigidBodyData[i].type == 0)
 				{
-					collided = collisionTestSpheres(colPointA, colPointB, normalA, normalB, rigidBodyData[coord].position, rigidBodyData[coord].characteristicOne,
-						rigidBodyData[i].position, rigidBodyData[i].characteristicOne);
+					collided = collisionTestSpheres(colPointA, colPointB, normalA, normalB, rigidbodies.rigidBodyData[coord].position, rigidbodies.rigidBodyData[coord].characteristicOne,
+						rigidbodies.rigidBodyData[i].position, rigidbodies.rigidBodyData[i].characteristicOne);
 				}
-				else if(rigidBodyData[i].type == 1)
+				else if(rigidbodies.rigidBodyData[i].type == 1)
 				{
 					vec3 minB, maxB;
 
-					minB.x = rigidBodyData[i].position.x - rigidBodyData[i].characteristicOne;
-					maxB.x = rigidBodyData[i].position.x +rigidBodyData[i].characteristicOne;
+					minB.x = rigidbodies.rigidBodyData[i].position.x - rigidbodies.rigidBodyData[i].characteristicOne;
+					maxB.x = rigidbodies.rigidBodyData[i].position.x +rigidbodies.rigidBodyData[i].characteristicOne;
 
-					minB.y = rigidBodyData[i].position.y - rigidBodyData[i].characteristicTwo;
-					maxB.y = rigidBodyData[i].position.y + rigidBodyData[i].characteristicTwo;
+					minB.y = rigidbodies.rigidBodyData[i].position.y - rigidbodies.rigidBodyData[i].characteristicTwo;
+					maxB.y = rigidbodies.rigidBodyData[i].position.y + rigidbodies.rigidBodyData[i].characteristicTwo;
 
-					minB.z = rigidBodyData[i].position.z - rigidBodyData[i].characteristicThree;
-					maxB.z = rigidBodyData[i].position.z + rigidBodyData[i].characteristicThree;
+					minB.z = rigidbodies.rigidBodyData[i].position.z - rigidbodies.rigidBodyData[i].characteristicThree;
+					maxB.z = rigidbodies.rigidBodyData[i].position.z + rigidbodies.rigidBodyData[i].characteristicThree;
 
-					collided = collisionTestSphereAABB(colPointA, colPointB, normalA, normalB, rigidBodyData[coord].position, rigidBodyData[coord].characteristicOne,
+					collided = collisionTestSphereAABB(colPointA, colPointB, normalA, normalB, rigidbodies.rigidBodyData[coord].position, rigidbodies.rigidBodyData[coord].characteristicOne,
 						minB, maxB);
 				}
 			}
-			else if(rigidBodyData[coord].type == 1)
+			else if(rigidbodies.rigidBodyData[coord].type == 1)
 			{
-				if(rigidBodyData[i].type == 0)
+				if(rigidbodies.rigidBodyData[i].type == 0)
 				{
 					vec3 minB, maxB;
 
-					minB.x = rigidBodyData[coord].position.x - rigidBodyData[coord].characteristicOne;
-					maxB.x = rigidBodyData[coord].position.x +rigidBodyData[coord].characteristicOne;
+					minB.x = rigidbodies.rigidBodyData[coord].position.x - rigidbodies.rigidBodyData[coord].characteristicOne;
+					maxB.x = rigidbodies.rigidBodyData[coord].position.x +rigidbodies.rigidBodyData[coord].characteristicOne;
 										   
-					minB.y = rigidBodyData[coord].position.y - rigidBodyData[coord].characteristicTwo;
-					maxB.y = rigidBodyData[coord].position.y + rigidBodyData[coord].characteristicTwo;
+					minB.y = rigidbodies.rigidBodyData[coord].position.y - rigidbodies.rigidBodyData[coord].characteristicTwo;
+					maxB.y = rigidbodies.rigidBodyData[coord].position.y + rigidbodies.rigidBodyData[coord].characteristicTwo;
 										   
-					minB.z = rigidBodyData[coord].position.z - rigidBodyData[coord].characteristicThree;
-					maxB.z = rigidBodyData[coord].position.z + rigidBodyData[coord].characteristicThree;
+					minB.z = rigidbodies.rigidBodyData[coord].position.z - rigidbodies.rigidBodyData[coord].characteristicThree;
+					maxB.z = rigidbodies.rigidBodyData[coord].position.z + rigidbodies.rigidBodyData[coord].characteristicThree;
 
-					collided = collisionTestSphereAABB(colPointA, colPointB, normalA, normalB, rigidBodyData[i].position, rigidBodyData[i].characteristicOne,
+					collided = collisionTestSphereAABB(colPointA, colPointB, normalA, normalB, rigidbodies.rigidBodyData[i].position, rigidbodies.rigidBodyData[i].characteristicOne,
 						minB, maxB);
 				}
 			}
 		}
 
-		if(collided == 1)
+		if(collided != 0)
 		{
 				// http://www.chrishecker.com/images/e/e7/Gdmphys3.pdf
-
 				vec3 rVel;
-				rVel =  rigidBodyData[coord].velocity - rigidBodyData[i].velocity;
+				rVel =  rigidbodies.rigidBodyData[coord].velocity - rigidbodies.rigidBodyData[i].velocity;
 
 				float j1 = (-2 * dot(rVel, normalA)) / (dot(normalA, 
-					normalA)*(rigidBodyData[coord].massInv + rigidBodyData[i].massInv));
+					normalA)*(rigidbodies.rigidBodyData[coord].massInv + rigidbodies.rigidBodyData[i].massInv));
 
-				rigidBodyData[coord].velocity = normalA * (j1 * rigidBodyData[coord].massInv);
-				rigidBodyData[i].velocity =  normalB * (j1 * rigidBodyData[i].massInv);
+				rigidbodies.rigidBodyData[coord].velocity = normalA * (j1 * rigidbodies.rigidBodyData[coord].massInv);
+				rigidbodies.rigidBodyData[i].velocity =  normalB * (j1 * rigidbodies.rigidBodyData[i].massInv);
 		}
 	}
 }
