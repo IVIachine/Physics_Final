@@ -1,7 +1,7 @@
 /*
 	Brian Baron		0974390
-	Tyler Chermely	id
-	Justin Mulkin	id
+	Tyler Chermely	0967813
+	Justin Mulkin	0952465
 
 	EGP-425 Final Project
 

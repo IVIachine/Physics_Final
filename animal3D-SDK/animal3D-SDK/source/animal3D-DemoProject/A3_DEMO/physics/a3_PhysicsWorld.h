@@ -1,3 +1,14 @@
+/*This file 
+was
+modified by 
+
+Brian Baron
+Tyler Chermely
+Justin Mulkin
+
+with permission 
+from author.*/
+
 /*
 	Copyright 2011-2018 Daniel S. Buckstein
 
