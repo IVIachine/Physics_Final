@@ -17,7 +17,7 @@
 /*
 	animal3D SDK: Minimal 3D Animation Framework
 	By Daniel S. Buckstein
-	
+
 	a3_PhysicsWorld.c/.cpp
 	Physics world function implementations.
 */
@@ -125,13 +125,13 @@ void a3physicsInitialize_internal(a3_PhysicsWorld *world)
 
 
 	// set up rigid bodies to test ray picking
-	
+
 	// ****TO-DO: 
 	//	- add rotation to all
-	
+
 	// static shapes
 	world->rigidbodiesActive = 0;
-	
+
 	const a3real PLANE_SIZE = 30.0f;
 
 	world->rb_ground[0].position.x = a3realZero;
@@ -273,7 +273,7 @@ void a3physicsInitialize_internal(a3_PhysicsWorld *world)
 	// Set the program to equal negative one
 	// In update - conditional check - if program = -1, don't do it, otherwise do it
 //	world->computeShader = -1;
-	
+
 
 	wglMakeCurrent(*world->dcRef, *world->physicsRenderContext);
 
@@ -364,7 +364,7 @@ void a3handleCollision(a3_ConvexHullCollision* collision, a3_ConvexHull* hull_a,
 	a3vec3 rVel;
 	a3real3Diff(rVel.v, hull_a->rb->velocity.v, hull_b->rb->velocity.v);
 
-	a3real j1 = (-a3realTwo * a3real3Dot(rVel.v, collision->normal_a[0].v)) / (a3real3Dot(collision->normal_a[0].v, 
+	a3real j1 = (-a3realTwo * a3real3Dot(rVel.v, collision->normal_a[0].v)) / (a3real3Dot(collision->normal_a[0].v,
 		collision->normal_a[0].v)*(hull_a->rb->massInv + hull_b->rb->massInv));
 
 	a3real3Add(hull_a->rb->velocity.v, a3real3ProductS(rVel.v, collision->normal_a[0].v, (j1 * hull_a->rb->massInv)));
@@ -416,8 +416,7 @@ void a3physicsUpdate(a3_PhysicsWorld *world, double dt)
 
 	a3_ConvexHullCollision collision[1] = { 0 };
 
-	if (world->framesSkipped < 5)
-		world->framesSkipped++;
+
 
 	// ****TO-DO: 
 	//	- apply forces and torques
@@ -442,8 +441,6 @@ void a3physicsUpdate(a3_PhysicsWorld *world, double dt)
 	// accumulate time
 	world->t += dt;
 
-	updateHulls(world);
-
 	if (world->framesSkipped >= 5)
 	{
 		wglMakeCurrent(*world->dcRef, *world->physicsRenderContext);
@@ -460,9 +457,10 @@ void a3physicsUpdate(a3_PhysicsWorld *world, double dt)
 			sendMetoTheShader.rigidbody[i].type = world->hull[i].type == a3hullType_sphere ? 0 : 1;
 			sendMetoTheShader.rigidbody[i].characteristicOne = world->hull[i].type == a3hullType_sphere ? (unsigned int)world->hull[i].prop[a3hullProperty_radius] : (unsigned int)world->hull[i].prop[a3hullProperty_halfwidth];
 			sendMetoTheShader.rigidbody[i].characteristicTwo = world->hull[i].type == a3hullType_sphere ? (unsigned int)world->hull[i].prop[a3hullProperty_radius] : (unsigned int)world->hull[i].prop[a3hullProperty_halfheight];
-			sendMetoTheShader.rigidbody[i].characteristicThree = world->hull[i].type == a3hullType_sphere ? (unsigned int)world->hull[i].prop[a3hullProperty_radius] : (unsigned int)world->hull[i].prop[a3hullProperty_halfdepth];
+			sendMetoTheShader.rigidbody[i].characteristicThree = world->hull[i].type == a3hullType_sphere ? (unsigned int)world->hull[i].prop[a3hullProperty_radius]: (unsigned int)world->hull[i].prop[a3hullProperty_halfdepth];
 		}
 
+		printf("%lf\n", sendMetoTheShader.rigidbody[0].massInv);
 		ssboWriteBuffer(world->ssboRigidbodies, sizeof(sendMetoTheShader), &sendMetoTheShader);
 		//
 		// dispatch the compute shader
@@ -476,8 +474,12 @@ void a3physicsUpdate(a3_PhysicsWorld *world, double dt)
 		// read the data back
 
 		ssboReadBuffer(world->ssboRigidbodies, sizeof(sendMetoTheShader), &sendMetoTheShader);
+		printf("%lf\n", sendMetoTheShader.rigidbody[0].massInv);
+		for (unsigned int i = 0; i < sendMetoTheShader.rigidBodyCount; ++i)
+		{
+			a3real3Set(world->rigidbody->velocity.v, sendMetoTheShader.rigidbody[i].velocity.x, sendMetoTheShader.rigidbody[i].velocity.y, sendMetoTheShader.rigidbody[i].velocity.z);
+		}
 
-		printf("%d\n", sendMetoTheShader.rigidBodyCount);
 
 		//---------------------------------------------------------------------
 		a3shaderProgramDeactivate(world->computeShader->program);
@@ -486,7 +488,12 @@ void a3physicsUpdate(a3_PhysicsWorld *world, double dt)
 		{
 			a3real3Set(world->rigidbody[i].velocity.v, sendMetoTheShader.rigidbody[i].velocity.x, sendMetoTheShader.rigidbody[i].velocity.y, sendMetoTheShader.rigidbody[i].velocity.z);
 		}
+
 	}
+	else
+		world->framesSkipped++;
+
+	updateHulls(world);
 
 	// write operation is locked
 	if (a3physicsLockWorld(world) > 0)

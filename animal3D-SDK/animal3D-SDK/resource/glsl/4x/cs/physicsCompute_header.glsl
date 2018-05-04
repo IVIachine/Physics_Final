@@ -86,7 +86,7 @@ int collisionTestSphereAABB(inout vec4 colPointA, inout vec4 colPointB, inout ve
 void main() {
 	uint coord = gl_GlobalInvocationID.x;
 
-	rigidbodies.numRigidbodies = 1000;
+	rigidbodies.rigidBodyData[0].massInv = 10.0f;
 	return;
 
 	for(int i = 0; i < rigidbodies.numRigidbodies; i++)
@@ -140,6 +140,9 @@ void main() {
 			}
 		}
 
+		rigidbodies.rigidBodyData[i].massInv = 1;
+		rigidbodies.rigidBodyData[coord].massInv = 1;
+
 		if(collided != 0)
 		{
 				// http://www.chrishecker.com/images/e/e7/Gdmphys3.pdf
@@ -148,9 +151,6 @@ void main() {
 
 				float j1 = (-2 * dot(rVel, normalA)) / (dot(normalA, 
 					normalA)*(rigidbodies.rigidBodyData[coord].massInv + rigidbodies.rigidBodyData[i].massInv));
-
-				rigidbodies.rigidBodyData[coord].velocity = normalA * (j1 * rigidbodies.rigidBodyData[coord].massInv);
-				rigidbodies.rigidBodyData[i].velocity =  normalB * (j1 * rigidbodies.rigidBodyData[i].massInv);
 		}
 	}
 }

@@ -408,7 +408,6 @@ void a3demo_loadShaders(a3_DemoState *demoState)
 
 			// compute shaders
 			//TYLER GO
-			a3_Shader physicsCompute_cs[1];
 		};
 	} shaderList = { 0 };
 	a3_Shader *const shaderListPtr = (a3_Shader *)(&shaderList);
@@ -432,8 +431,6 @@ void a3demo_loadShaders(a3_DemoState *demoState)
 		{ a3shader_fragment,	1, { "../../../../resource/glsl/4x/fs/e/drawColorUnifTexture_fs4x.glsl" } },
 		{ a3shader_fragment,	1, { "../../../../resource/glsl/4x/fs/e/drawColorUnif_fs4x.glsl" } },
 		{ a3shader_fragment,	1, { "../../../../resource/glsl/4x/fs/e/drawColorAttrib_fs4x.glsl" } },
-		//TYLER GO
-		{ a3shader_compute,		1, { "../../../../resource/glsl/4x/cs/physicsCompute_header.glsl" } },
 	};
 
 	// load unique shaders: 
@@ -450,11 +447,6 @@ void a3demo_loadShaders(a3_DemoState *demoState)
 	// setup programs: 
 	//	- create program object
 	//	- attach shader objects
-
-	//TYLER GO
-	currentDemoProg = demoState->prog_physicsCompute;
-	a3shaderProgramCreate(currentDemoProg->program);
-	a3shaderProgramAttachShader(currentDemoProg->program, shaderList.physicsCompute_cs);
 
 	// Find a way to save a reference to this program in the physics world
 	// draw ray program
