@@ -457,9 +457,6 @@ void a3demo_loadShaders(a3_DemoState *demoState)
 	a3shaderProgramAttachShader(currentDemoProg->program, shaderList.physicsCompute_cs);
 
 	// Find a way to save a reference to this program in the physics world
-	// This should do it?
-	saveShaderReference(demoState->physicsWorld, currentDemoProg);
-
 	// draw ray program
 	currentDemoProg = demoState->prog_drawRay;
 	a3shaderProgramCreate(currentDemoProg->program);
@@ -862,8 +859,7 @@ void a3demo_update(a3_DemoState *demoState, double dt)
 		const a3_PhysicsWorldState worldState[1] = { *(demoState->physicsWorld->state) };
 
 		// unlock
-		a3physicsUnlockWorld(demoState->physicsWorld);
-
+		a3physicsUnlockWorld(demoState->physicsWorld);		
 
 		// copy from physics world to demo state here
 		for (i = 0; i < worldState->count_rb; ++i)
@@ -898,6 +894,7 @@ void a3demo_update(a3_DemoState *demoState, double dt)
 
 void a3demo_render(const a3_DemoState *demoState)
 {
+	//wglMakeCurrent(*demoState->dcRef, *demoState->demoRenderContext);
 	const a3_VertexDrawable *currentDrawable;
 	const a3_DemoStateShaderProgram *currentDemoProgram;
 
@@ -1257,6 +1254,3 @@ void a3demo_render(const a3_DemoState *demoState)
 		glEnable(GL_DEPTH_TEST);
 	}
 }
-
-
-//-----------------------------------------------------------------------------

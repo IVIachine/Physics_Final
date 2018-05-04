@@ -18,8 +18,9 @@ layout(local_size_x = 1) in;
 
 struct Rigidbody
 {
-	vec3 velocity;
-	vec3 position;
+	vec4 velocity;
+	vec4 position;
+
 	float massInv;
 	uint type;
 	uint characteristicOne, characteristicTwo, characteristicThree, characteristicFour;
@@ -31,11 +32,11 @@ layout(std430, binding = 2) buffer rigidBodies
     Rigidbody rigidBodyData[];
 } rigidbodies;
 
-int collisionTestSpheres(inout vec3 colPointA, inout vec3 colPointB, inout vec3 colNormalA, inout vec3 colNormalB,
-	vec3 sphereCenter_a, float sphereRadius_a, vec3 sphereCenter_b, float sphereRadius_b)
+int collisionTestSpheres(inout vec4 colPointA, inout vec4 colPointB, inout vec4 colNormalA, inout vec4 colNormalB,
+	vec4 sphereCenter_a, float sphereRadius_a, vec4 sphereCenter_b, float sphereRadius_b)
 {
 	float sumRadii = sphereRadius_a + sphereRadius_b;
-	vec3 diff_tmp = sphereCenter_a - sphereCenter_b;
+	vec4 diff_tmp = sphereCenter_a - sphereCenter_b;
 
 	if (length(diff_tmp) <= sumRadii)
 	{
@@ -56,16 +57,16 @@ int collisionTestSpheres(inout vec3 colPointA, inout vec3 colPointB, inout vec3 
 	return 0;
 }
 
-int collisionTestSphereAABB(inout vec3 colPointA, inout vec3 colPointB, inout vec3 colNormalA, inout vec3 colNormalB,
-	vec3 sphereCenter_localToAABB, float sphereRadius, vec3 aabbMinExtents, vec3 aabbMaxExtents)
+int collisionTestSphereAABB(inout vec4 colPointA, inout vec4 colPointB, inout vec4 colNormalA, inout vec4 colNormalB,
+	vec4 sphereCenter_localToAABB, float sphereRadius, vec4 aabbMinExtents, vec4 aabbMaxExtents)
 {
-	vec3 tmp;
+	vec4 tmp;
 	// closest point to the sphere center on the box
 	tmp.x = (sphereCenter_localToAABB[0] < aabbMinExtents[0]) ? aabbMinExtents[0] : (sphereCenter_localToAABB[0] > aabbMaxExtents[0]) ? aabbMaxExtents[0] : sphereCenter_localToAABB[0];
 	tmp.y = (sphereCenter_localToAABB[1] < aabbMinExtents[1]) ? aabbMinExtents[1] : (sphereCenter_localToAABB[1] > aabbMaxExtents[1]) ? aabbMaxExtents[1] : sphereCenter_localToAABB[1];
 	tmp.z = (sphereCenter_localToAABB[2] < aabbMinExtents[2]) ? aabbMinExtents[2] : (sphereCenter_localToAABB[2] > aabbMaxExtents[2]) ? aabbMaxExtents[2] : sphereCenter_localToAABB[2];
 
-	vec3 diff_tmp = tmp - sphereCenter_localToAABB;
+	vec4 diff_tmp = tmp - sphereCenter_localToAABB;
 	if (length(diff_tmp) <=  sphereRadius)
 	{
 		// sphere is a
@@ -83,13 +84,14 @@ int collisionTestSphereAABB(inout vec3 colPointA, inout vec3 colPointB, inout ve
 }
 
 void main() {
-	int coord = ivec2(gl_GlobalInvocationID.xy).x;
+	uint coord = gl_GlobalInvocationID.x;
 
 	rigidbodies.numRigidbodies = 1000;
+	return;
 
 	for(int i = 0; i < rigidbodies.numRigidbodies; i++)
 	{
-		vec3 normalA, normalB, colPointA, colPointB;
+		vec4 normalA, normalB, colPointA, colPointB;
 		int collided = 0;
 		if(coord != i)
 		{
@@ -102,7 +104,7 @@ void main() {
 				}
 				else if(rigidbodies.rigidBodyData[i].type == 1)
 				{
-					vec3 minB, maxB;
+					vec4 minB, maxB;
 
 					minB.x = rigidbodies.rigidBodyData[i].position.x - rigidbodies.rigidBodyData[i].characteristicOne;
 					maxB.x = rigidbodies.rigidBodyData[i].position.x +rigidbodies.rigidBodyData[i].characteristicOne;
@@ -121,7 +123,7 @@ void main() {
 			{
 				if(rigidbodies.rigidBodyData[i].type == 0)
 				{
-					vec3 minB, maxB;
+					vec4 minB, maxB;
 
 					minB.x = rigidbodies.rigidBodyData[coord].position.x - rigidbodies.rigidBodyData[coord].characteristicOne;
 					maxB.x = rigidbodies.rigidBodyData[coord].position.x +rigidbodies.rigidBodyData[coord].characteristicOne;
@@ -141,7 +143,7 @@ void main() {
 		if(collided != 0)
 		{
 				// http://www.chrishecker.com/images/e/e7/Gdmphys3.pdf
-				vec3 rVel;
+				vec4 rVel;
 				rVel =  rigidbodies.rigidBodyData[coord].velocity - rigidbodies.rigidBodyData[i].velocity;
 
 				float j1 = (-2 * dot(rVel, normalA)) / (dot(normalA, 

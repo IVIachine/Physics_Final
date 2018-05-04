@@ -34,11 +34,12 @@
 
 //-----------------------------------------------------------------------------
 // physics includes
-
 #include "a3_Collision.h"
+#include "animal3D\a3graphics\a3_ShaderProgram.h"
+#include "A3_DEMO\_utilities\a3_DemoShaderProgram.h"
 #include "../BSP.h"
 #include "GL/glew.h"
-
+#include <Windows.h>
 //-----------------------------------------------------------------------------
 
 #ifdef __cplusplus
@@ -88,8 +89,43 @@ extern "C"
 
 
 //-----------------------------------------------------------------------------
+	
+//-----------------------------------------------------------------------------
 
-	// persistent physics world data structure
+	// threaded simulation
+	void a3physicsUpdate(a3_PhysicsWorld *world, double dt);
+	long a3physicsThread(a3_PhysicsWorld *world);
+
+	// world utilities
+	int a3physicsWorldStateReset(a3_PhysicsWorldState *worldState);
+
+	// mutex handling
+	inline int a3physicsLockWorld(a3_PhysicsWorld *world);
+	inline int a3physicsUnlockWorld(a3_PhysicsWorld *world);
+
+
+//-----------------------------------------------------------------------------
+// For the final project
+// We need:
+// a buffer that stores all the rigidbodies
+// a max number of rigidbodies
+	struct fakeRigidBody
+	{
+		a3vec4 velocity;
+		a3vec4 position;
+		float massInv;
+
+		unsigned int type;
+		unsigned int characteristicOne, characteristicTwo, characteristicThree, characteristicFour;
+	};
+
+	struct rigidBodySSBOBufferData
+	{
+		unsigned int rigidBodyCount;
+		fakeRigidBody rigidbody[physicsMaxCount_rigidbody];
+	};
+
+		// persistent physics world data structure
 	struct a3_PhysicsWorld
 	{
 		//---------------------------------------------------------------------
@@ -112,8 +148,6 @@ extern "C"
 		a3_PhysicsWorldState state[1];
 
 		//---------------------------------------------------------------------
-		// Reference to the compute shader?
-		a3_DemoStateShaderProgram *computeShader;
 
 		//---------------------------------------------------------------------
 		// general variables pertinent to the state
@@ -150,50 +184,17 @@ extern "C"
 		//---------------------------------------------------------------------
 		// SSBO handles
 		GLuint ssboRigidbodies;
+		HGLRC physicsRenderContext[1];
+		HDC dcRef[1];
+		a3_DemoStateShaderProgram computeShader[1];
 	};
 
-	
-//-----------------------------------------------------------------------------
+	rigidBodySSBOBufferData sendMetoTheShader;
 
-	// threaded simulation
-	void a3physicsUpdate(a3_PhysicsWorld *world, double dt);
-	long a3physicsThread(a3_PhysicsWorld *world);
-
-	// world utilities
-	int a3physicsWorldStateReset(a3_PhysicsWorldState *worldState);
-
-	// mutex handling
-	inline int a3physicsLockWorld(a3_PhysicsWorld *world);
-	inline int a3physicsUnlockWorld(a3_PhysicsWorld *world);
-
-
-//-----------------------------------------------------------------------------
-// For the final project
-// We need:
-// a buffer that stores all the rigidbodies
-// a max number of rigidbodies
-	struct fakeRigidBody
-	{
-		a3vec3 velocity;
-		a3vec3 position;
-		float massInv;
-
-		unsigned int type;
-		unsigned int characteristicOne, characteristicTwo, characteristicThree, characteristicFour;
-	};
-
-	struct rigidBodySSBOBufferData
-	{
-		unsigned int rigidBodyCount;
-		fakeRigidBody rigidbody[physicsMaxCount_rigidbody];
-	} sendMetoTheShader;
-
+	void ssboBindBuffer(GLuint* program, GLuint dataSize, void *bufferData, GLuint bindingLocation);
 // we need access to openGL to bind the buffers for the SSBOs
-	void ssboBindBuffer(GLuint *program, GLuint dataSize, void *bufferData, GLuint bindingLocation);
-	void ssboWriteBuffer(GLuint *program, GLuint dataSize, void *data);
-	void ssboReadBuffer(GLuint *program, GLuint dataSize, void *dest);
-
-	void saveShaderReference(a3_PhysicsWorld *world, a3_DemoStateShaderProgram *program);
+	void ssboWriteBuffer(GLuint program, GLuint dataSize, void *data);
+	void ssboReadBuffer(GLuint program, GLuint dataSize, void *dest);
 
 	// how to use
 	//setup compute program (need to make a function for it)

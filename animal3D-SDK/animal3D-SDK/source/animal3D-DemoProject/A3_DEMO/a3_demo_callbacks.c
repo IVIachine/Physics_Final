@@ -70,6 +70,12 @@ inline void a3demo_initializePhysicsThread(a3_DemoState *demoState)
 	demoState->physicsWorld->lock = 0;
 	demoState->physicsWorld->init = 0;
 	demoState->physicsWorld->rate = 100.0;
+	*demoState->dcRef = GetDC(GetActiveWindow());
+
+	*demoState->physicsWorld->dcRef = *demoState->dcRef;
+	*demoState->demoRenderContext = wglCreateContext(*demoState->dcRef);
+	*demoState->physicsWorld->physicsRenderContext = wglCreateContext(*demoState->dcRef);
+
 	a3threadLaunch(demoState->physicsThread, (a3_threadfunc)a3physicsThread, demoState->physicsWorld, "a3physicsThread");
 
 	// wait for thread to initialize

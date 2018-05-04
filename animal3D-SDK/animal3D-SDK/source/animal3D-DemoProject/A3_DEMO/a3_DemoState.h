@@ -62,7 +62,7 @@ project on its database.
 // physics includes
 
 #include "physics/a3_PhysicsWorld.h"
-
+#include <windows.h>
 
 //-----------------------------------------------------------------------------
 
@@ -138,18 +138,15 @@ extern "C"
 
 		unsigned int demoMode, demoModeCount;
 
-
 		// physics world embedded in demo
 		a3_PhysicsWorld physicsWorld[1];
 
 		// object counts
 		unsigned int rigidbodyObjects, particleObjects;
 
-
 		// extra display options
 		int displayGrid, displayAxes, displaySkybox;
 		int displayPhysicsText;
-
 
 		// ray and prevailing hit
 		a3_Ray ray[1];
@@ -216,6 +213,9 @@ extern "C"
 			};
 		};
 
+		HDC dcRef[1];
+		HGLRC demoRenderContext[1];
+
 		// threads
 		union {
 			a3_Thread thread[demoStateMaxCount_thread];
@@ -224,7 +224,6 @@ extern "C"
 					physicsThread[1];					// independent physics simulation thread
 			};
 		};
-
 
 		// textures
 		union {
@@ -324,12 +323,6 @@ extern "C"
 	void a3demo_input(a3_DemoState *demoState, double dt);
 	void a3demo_update(a3_DemoState *demoState, double dt);
 	void a3demo_render(const a3_DemoState *demoState);
-
-
-//-----------------------------------------------------------------------------
-
-
-
 
 #ifdef __cplusplus
 }

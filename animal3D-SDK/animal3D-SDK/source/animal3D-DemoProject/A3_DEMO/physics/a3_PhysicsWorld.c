@@ -34,7 +34,6 @@
 #include "animal3D/a3utility/a3_Timer.h"
 #include "A3_DEMO\_utilities\a3_DemoShaderProgram.h"
 
-
 // external
 #include <stdio.h>
 #include <string.h>
@@ -274,11 +273,77 @@ void a3physicsInitialize_internal(a3_PhysicsWorld *world)
 	// Set the program to equal negative one
 	// In update - conditional check - if program = -1, don't do it, otherwise do it
 //	world->computeShader = -1;
+	
+
+	wglMakeCurrent(*world->dcRef, *world->physicsRenderContext);
+
+	// list of all unique shaders
+	// this is a good idea to avoid multi-loading 
+	//	those that are shared between programs
+	union {
+		struct {
+			// vertex shaders
+			a3_Shader passLambertComponents_eye_transform_vs[1];
+			a3_Shader passTexcoord_transform_vs[1];
+			a3_Shader passthru_transform_vs[1];
+			a3_Shader passColor_transform_vs[1];
+			a3_Shader dummy_vs[1];
+
+			// geometry shaders
+			a3_Shader drawRay_gs[1];
+
+			// fragment shaders
+			a3_Shader drawLambert_eye_fs[1];
+			a3_Shader drawColorUnifTexture_fs[1];
+			a3_Shader drawColorUnif_fs[1];
+			a3_Shader drawColorAttrib_fs[1];
+
+			// compute shaders
+			//TYLER GO
+			a3_Shader physicsCompute_cs[1];
+		};
+	} shaderList = { 0 };
+	a3_Shader *const shaderListPtr = (a3_Shader *)(&shaderList);
+
+	//TYLER GO
+	struct {
+		a3_ShaderType shaderType;
+		unsigned int srcCount;
+		const char *filePath[8];	// max number of source files per shader
+	} shaderDescriptor[] = {
+		{ a3shader_vertex,		1,{ "../../../../resource/glsl/4x/vs/e/passLambertComponents_eye_transform_vs4x.glsl" } },
+	{ a3shader_vertex,		1,{ "../../../../resource/glsl/4x/vs/e/passTexcoord_transform_vs4x.glsl" } },
+	{ a3shader_vertex,		1,{ "../../../../resource/glsl/4x/vs/e/passthru_transform_vs4x.glsl" } },
+	{ a3shader_vertex,		1,{ "../../../../resource/glsl/4x/vs/e/passColor_transform_vs4x.glsl" } },
+	{ a3shader_vertex,		1,{ "../../../../resource/glsl/4x/vs/e/dummy_vs4x.glsl" } },
+
+	{ a3shader_geometry,	1,{ "../../../../resource/glsl/4x/gs/e/drawRay_gs4x.glsl" } },
+
+	{ a3shader_fragment,	1,{ "../../../../resource/glsl/4x/fs/e/drawLambert_eye_fs4x.glsl" } },
+	{ a3shader_fragment,	1,{ "../../../../resource/glsl/4x/fs/e/drawColorUnifTexture_fs4x.glsl" } },
+	{ a3shader_fragment,	1,{ "../../../../resource/glsl/4x/fs/e/drawColorUnif_fs4x.glsl" } },
+	{ a3shader_fragment,	1,{ "../../../../resource/glsl/4x/fs/e/drawColorAttrib_fs4x.glsl" } },
+	//TYLER GO
+	{ a3shader_compute,		1,{ "../../../../resource/glsl/4x/cs/physicsCompute_header.glsl" } },
+	};
+
+	a3shaderCreateFromFileList(shaderListPtr + 10, shaderDescriptor[10].shaderType,
+		shaderDescriptor[10].filePath, shaderDescriptor[10].srcCount);
+
+	a3shaderProgramCreate(world->computeShader->program);
+	a3shaderProgramAttachShader(world->computeShader->program, shaderList.physicsCompute_cs);
+
+	a3shaderProgramLink(world->computeShader->program);
+	a3shaderProgramValidate(world->computeShader->program);
+
+	// if linking fails, contingency plan goes here
+	// otherwise, release shaders
+	//a3shaderRelease(shaderList.physicsCompute_cs);
 
 	// bind ssbo buffer
-	ssboBindBuffer(&(world->ssboRigidbodies), sizeof(sendMetoTheShader), &sendMetoTheShader, 2);
+	ssboBindBuffer(&world->ssboRigidbodies, sizeof(sendMetoTheShader), &sendMetoTheShader, 2);
 	// write initial data
-	ssboWriteBuffer(&(world->ssboRigidbodies), sizeof(sendMetoTheShader), &sendMetoTheShader);
+	ssboWriteBuffer(world->ssboRigidbodies, sizeof(sendMetoTheShader), &sendMetoTheShader);
 
 	// reset state
 	a3physicsWorldStateReset(world->state);
@@ -381,14 +446,15 @@ void a3physicsUpdate(a3_PhysicsWorld *world, double dt)
 
 	if (world->framesSkipped >= 5)
 	{
+		wglMakeCurrent(*world->dcRef, *world->physicsRenderContext);
 		//---------------------------------------------------------------------
 		// DO THIS AFTER INTEGRATION
 		// write to the buffer, current rigidbody data
 		sendMetoTheShader.rigidBodyCount = world->rigidbodiesActive;
 		for (unsigned int i = 0; i < sendMetoTheShader.rigidBodyCount; ++i)
 		{
-			sendMetoTheShader.rigidbody[i].velocity = world->rigidbody[i].velocity;
-			sendMetoTheShader.rigidbody[i].position = world->rigidbody[i].position;
+			a3real4Set(sendMetoTheShader.rigidbody[i].velocity.v, world->rigidbody[i].velocity.x, world->rigidbody[i].velocity.y, world->rigidbody[i].velocity.z, 1);
+			a3real4Set(sendMetoTheShader.rigidbody[i].position.v, world->rigidbody[i].position.x, world->rigidbody[i].position.y, world->rigidbody[i].position.z, 1);
 			sendMetoTheShader.rigidbody[i].massInv = world->rigidbody[i].massInv;
 
 			sendMetoTheShader.rigidbody[i].type = world->hull[i].type == a3hullType_sphere ? 0 : 1;
@@ -397,7 +463,7 @@ void a3physicsUpdate(a3_PhysicsWorld *world, double dt)
 			sendMetoTheShader.rigidbody[i].characteristicThree = world->hull[i].type == a3hullType_sphere ? (unsigned int)world->hull[i].prop[a3hullProperty_radius] : (unsigned int)world->hull[i].prop[a3hullProperty_halfdepth];
 		}
 
-		ssboWriteBuffer(&(world->ssboRigidbodies), sizeof(sendMetoTheShader), &sendMetoTheShader);
+		ssboWriteBuffer(world->ssboRigidbodies, sizeof(sendMetoTheShader), &sendMetoTheShader);
 		//
 		// dispatch the compute shader
 		//TYLER GO
@@ -408,7 +474,8 @@ void a3physicsUpdate(a3_PhysicsWorld *world, double dt)
 		}
 		//
 		// read the data back
-		ssboReadBuffer(&(world->ssboRigidbodies), sizeof(sendMetoTheShader), &sendMetoTheShader);
+
+		ssboReadBuffer(world->ssboRigidbodies, sizeof(sendMetoTheShader), &sendMetoTheShader);
 
 		printf("%d\n", sendMetoTheShader.rigidBodyCount);
 
@@ -417,7 +484,7 @@ void a3physicsUpdate(a3_PhysicsWorld *world, double dt)
 
 		for (unsigned int i = 0; i < sendMetoTheShader.rigidBodyCount; ++i)
 		{
-			world->rigidbody[i].velocity = sendMetoTheShader.rigidbody[i].velocity;
+			a3real3Set(world->rigidbody[i].velocity.v, sendMetoTheShader.rigidbody[i].velocity.x, sendMetoTheShader.rigidbody[i].velocity.y, sendMetoTheShader.rigidbody[i].velocity.z);
 		}
 	}
 
@@ -429,7 +496,6 @@ void a3physicsUpdate(a3_PhysicsWorld *world, double dt)
 		a3physicsUnlockWorld(world);
 	}
 }
-
 
 // physics thread
 long a3physicsThread(a3_PhysicsWorld *world)
@@ -539,11 +605,7 @@ extern inline int a3physicsUnlockWorld(a3_PhysicsWorld *world)
 	return -1;
 }
 
-
-//-----------------------------------------------------------------------------
-// Final project functions
-
-void ssboBindBuffer(GLuint *program, GLuint dataSize, void *bufferData, GLuint bindingLocation)
+void ssboBindBuffer(GLuint* program, GLuint dataSize, void *bufferData, GLuint bindingLocation)
 {
 	glGenBuffers(1, program);
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, *program);
@@ -552,23 +614,20 @@ void ssboBindBuffer(GLuint *program, GLuint dataSize, void *bufferData, GLuint b
 	glBindBuffer(GL_SHADER_STORAGE_BUFFER, 0);
 }
 
-void ssboWriteBuffer(GLuint *program, GLuint dataSize, void *data)
+//-----------------------------------------------------------------------------
+// Final project functions
+void ssboWriteBuffer(GLuint program, GLuint dataSize, void *data)
 {
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, *program);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, program);
 	GLvoid* ptr = glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_WRITE);
-	ptr = data;
+	memcpy(ptr, data, dataSize);
 	glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
 }
 
-void ssboReadBuffer(GLuint *program, GLuint dataSize, void *dest)
+void ssboReadBuffer(GLuint program, GLuint dataSize, void *dest)
 {
-	glBindBuffer(GL_SHADER_STORAGE_BUFFER, *program);
+	glBindBuffer(GL_SHADER_STORAGE_BUFFER, program);
 	GLvoid* ptr = glMapBuffer(GL_SHADER_STORAGE_BUFFER, GL_READ_WRITE);
-	ptr = dest;
+	memcpy(dest, ptr, dataSize);
 	glUnmapBuffer(GL_SHADER_STORAGE_BUFFER);
-}
-
-void saveShaderReference(a3_PhysicsWorld *world, a3_DemoStateShaderProgram *program)
-{
-	world->computeShader = program;
 }
