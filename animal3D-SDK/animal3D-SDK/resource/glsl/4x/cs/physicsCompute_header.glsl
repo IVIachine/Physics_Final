@@ -169,14 +169,14 @@ void main() {
 		if(collided != 0)
 		{
 			// http://www.chrishecker.com/images/e/e7/Gdmphys3.pdf
-			vec4 rVel;
-			rVel =  velocities[coord] - velocities[i];
+			//vec4 rVel;
+			//rVel =  velocities[coord] - velocities[i];
 
-			float j1 = (-2 * dot(rVel, normalA)) / (dot(normalA, 
-				normalA)*(massInv[coord] + massInv[i]));
+			//float j1 = (-2 * dot(rVel, normalA)) / (dot(normalA, 
+			//	normalA)*(massInv[coord] + massInv[i]));
 
-			velocities[coord] += normalA * (j1 * massInv[coord]);
-			velocities[i] += normalB * (j1 * massInv[i]);
+			velocities[coord] *= -1;//normalA * (j1 * massInv[coord]);
+			velocities[i] *= -1;//normalB * (j1 * massInv[i]);
 		}
 	}
 }

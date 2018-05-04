@@ -361,6 +361,13 @@ void a3physicsInitialize_internal(a3_PhysicsWorld *world)
 	ssboWriteBuffer(world->ssboCharThree, sizeof(unsigned int) * mRigidBodyCount, &characteristicThrees);
 	ssboWriteBuffer(world->ssboCharFour, sizeof(unsigned int) * mRigidBodyCount, &characteristicFours);
 
+	// i hate this but it works
+	for (int i = 0; i < 11; ++i)
+	{
+		if ((world->hull + i)->type == a3hullType_sphere)
+			a3real3Set((world->rigidbody + i)->velocity.v, a3realZero, a3realZero, 12);
+	}
+
 	// reset state
 	a3physicsWorldStateReset(world->state);
 }
@@ -413,15 +420,15 @@ void a3physicsUpdate(a3_PhysicsWorld *world, double dt)
 	}
 
 
-	a3vec3 tmp;
+	//a3vec3 tmp;
 
-	for (int i = 0; i < 5; i++)
+	/*for (int i = 0; i < 5; i++)
 	{
 		a3forceGravity(tmp.v, a3zVec3.v, world->hull_sphere[i].rb->mass);
 		a3real3Add(world->hull_sphere[i].rb->force.v, tmp.v);
 		a3real3Add(world->hull_sphere[i].rb->force.v,
 			a3forceDrag(tmp.v, world->hull_sphere[i].rb->velocity.v, a3zeroVec3.v, 1.2f, world->hull_sphere[i].prop[a3hullProperty_radius], .47f));
-	}
+	}*/
 
 	state->count_rb = i;
 	for (i = 0; i < world->particlesActive; ++i)
@@ -440,7 +447,7 @@ void a3physicsUpdate(a3_PhysicsWorld *world, double dt)
 		// DO THIS AFTER INTEGRATION
 		// write to the buffer, current rigidbody data
 		mRigidBodyCount = world->rigidbodiesActive;
-		for (unsigned int i = 1; i < mRigidBodyCount; ++i)
+		for (unsigned int i = 0; i < mRigidBodyCount; ++i)
 		{
 			a3real4Set(velocities[i].v, world->rigidbody[i].velocity.x, world->rigidbody[i].velocity.y, world->rigidbody[i].velocity.z, 1);
 			a3real4Set(positions[i].v, world->rigidbody[i].position.x, world->rigidbody[i].position.y, world->rigidbody[i].position.z, 1);
@@ -478,8 +485,11 @@ void a3physicsUpdate(a3_PhysicsWorld *world, double dt)
 		for (unsigned int i = 0; i < mRigidBodyCount; ++i)
 		{
 			a3real3Set(world->rigidbody[i].velocity.v, velocities[i].x, velocities[i].y, velocities[i].z);
-			printf("%lf\n", velocities[i].x);
+			//printf("%lf\n", velocities[i].x);
 		}
+
+		printf("GPU out: %lf %lf %lf\n", velocities[7].x, velocities[7].y, velocities[7].z);
+		printf("CPU val: %lf %lf %lf\n", world->rigidbody[7].velocity.x, world->rigidbody[7].velocity.y, world->rigidbody[7].velocity.z);
 
 		// ****TO-DO: 
 		//	- apply forces and torques
