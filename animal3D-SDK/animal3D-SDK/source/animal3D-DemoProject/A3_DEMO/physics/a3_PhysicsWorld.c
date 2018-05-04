@@ -219,6 +219,7 @@ void a3physicsInitialize_internal(a3_PhysicsWorld *world)
 		(a3real)(PLANE_SIZE), (a3real)(PLANE_SIZE), 1, a3axis_z);
 	++world->rigidbodiesActive;
 
+	//world->rb_sphere[0].position.x = 0.0f;
 	world->rb_sphere[0].position.y = -10.0f;
 	world->rb_sphere[0].position.z = +5.0f;
 	a3real3Set(world->rb_sphere[0].velocity.v, 0, 0, 0);
@@ -238,7 +239,7 @@ void a3physicsInitialize_internal(a3_PhysicsWorld *world)
 	a3rigidbodySetMass(world->rb_sphere + 2, 0.5f);
 
 	world->rb_sphere[3].position.x = -10.0f;
-	world->rb_sphere[3].position.y = +10.0f;
+	world->rb_sphere[3].position.y = +5.0f;
 	world->rb_sphere[3].position.z = +10.0f;
 	world->rb_sphere[3].velocity.x = +3;
 	a3rigidbodySetMass(world->rb_sphere + 3, 0.5f);
@@ -365,7 +366,7 @@ void a3physicsInitialize_internal(a3_PhysicsWorld *world)
 	for (int i = 0; i < 11; ++i)
 	{
 		if ((world->hull + i)->type == a3hullType_sphere)
-			a3real3Set((world->rigidbody + i)->velocity.v, a3realZero, a3realZero, 12);
+			a3real3Set((world->rigidbody + i)->velocity.v, a3realZero, a3realZero, 3);
 	}
 
 	// reset state

@@ -121,7 +121,7 @@ void main() {
 		int collided = 0;
 		if(coord != i)
 		{
-			if(types[coord] == 1)
+			if(types[coord] == 0)
 			{
 				if(types[i] == 0)
 				{
