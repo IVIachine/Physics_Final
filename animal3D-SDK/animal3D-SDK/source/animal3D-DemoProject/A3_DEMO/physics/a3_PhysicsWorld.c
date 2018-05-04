@@ -500,9 +500,6 @@ void a3physicsUpdate(a3_PhysicsWorld *world, double dt)
 			//printf("%lf\n", velocities[i].x);
 		}
 
-		printf("GPU out: %lf %lf %lf\n", velocities[7].x, velocities[7].y, velocities[7].z);
-		printf("CPU val: %lf %lf %lf\n", world->rigidbody[7].velocity.x, world->rigidbody[7].velocity.y, world->rigidbody[7].velocity.z);
-
 		// ****TO-DO: 
 		//	- apply forces and torques
 
