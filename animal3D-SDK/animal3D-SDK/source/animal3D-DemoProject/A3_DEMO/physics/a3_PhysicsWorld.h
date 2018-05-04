@@ -109,21 +109,15 @@ extern "C"
 // We need:
 // a buffer that stores all the rigidbodies
 // a max number of rigidbodies
-	struct fakeRigidBody
-	{
-		a3vec4 velocity;
-		a3vec4 position;
-		float massInv;
+	a3vec4 velocities[physicsMaxCount_rigidbody];
+	a3vec4 positions[physicsMaxCount_rigidbody];
+	float massInvs[physicsMaxCount_rigidbody];
 
-		unsigned int type;
-		unsigned int characteristicOne, characteristicTwo, characteristicThree, characteristicFour;
-	};
+	unsigned int types[physicsMaxCount_rigidbody];
+	unsigned int characteristicOnes[physicsMaxCount_rigidbody], characteristicTwos[physicsMaxCount_rigidbody],
+		characteristicThrees[physicsMaxCount_rigidbody], characteristicFours[physicsMaxCount_rigidbody];
 
-	struct rigidBodySSBOBufferData
-	{
-		unsigned int rigidBodyCount;
-		fakeRigidBody rigidbody[physicsMaxCount_rigidbody];
-	};
+	unsigned int mRigidBodyCount;
 
 		// persistent physics world data structure
 	struct a3_PhysicsWorld
@@ -183,13 +177,11 @@ extern "C"
 		unsigned int numBSPs;
 		//---------------------------------------------------------------------
 		// SSBO handles
-		GLuint ssboRigidbodies;
+		GLuint ssboVelocities, ssboPositions, ssboMassInv, ssboType, ssboCharOne, ssboCharTwo, ssboCharThree, ssboCharFour, ssboCount;
 		HGLRC physicsRenderContext[1];
 		HDC dcRef[1];
 		a3_DemoStateShaderProgram computeShader[1];
 	};
-
-	rigidBodySSBOBufferData sendMetoTheShader;
 
 	void ssboBindBuffer(GLuint* program, GLuint dataSize, void *bufferData, GLuint bindingLocation);
 // we need access to openGL to bind the buffers for the SSBOs
