@@ -220,13 +220,13 @@ void a3physicsInitialize_internal(a3_PhysicsWorld *world)
 	++world->rigidbodiesActive;
 
 	//world->rb_sphere[0].position.x = 0.0f;
-	world->rb_sphere[0].position.y = -10.0f;
+	world->rb_sphere[0].position.y = -100.0f;
 	world->rb_sphere[0].position.z = +5.0f;
 	a3real3Set(world->rb_sphere[0].velocity.v, 0, 0, 0);
 	a3rigidbodySetMass(world->rb_sphere, 0.5f);
 
 	// moving shapes
-	world->rb_sphere[1].position.x = -10.0f;
+	world->rb_sphere[1].position.x = -100.0f;
 	world->rb_sphere[1].position.y = -10.0f;
 	world->rb_sphere[1].position.z = +5.0f;
 	world->rb_sphere[1].velocity.x = +15.0f;
